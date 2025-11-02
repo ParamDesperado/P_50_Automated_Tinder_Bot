@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock Tinder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .btn {
+      background: #ff3b5c;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 25px;
+      cursor: pointer;
+      margin: 10px;
+      font-size: 16px;
+    }
+
+    .btn:hover {
+      background: #ff1f44;
+    }
+
+    #cookie-banner, #login-section, #google-login, #main-app, #match-popup {
+      display: none;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    #cookie-banner.active,
+    #login-section.active,
+    #google-login.active,
+    #main-app.active,
+    #match-popup.active {
+      display: flex; /* Changed to flex for centering */
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      width: 300px;
+      height: 400px;
+      background: white;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      margin-top: 20px;
+    }
+
+    .card img {
+      width: 100%;
+      height: 70%;
+      object-fit: cover;
+    }
+
+    .buttons {
+      margin-top: 20px;
+      display: flex;
+      gap: 30px;
+      justify-content: center;
+    }
+
+    #login-google {
+      background-color: #4285f4;
+    }
+
+    #login-google:hover {
+      background-color: #357ae8;
+    }
+
+    /* --- ADDED FOR POPUP --- */
+    #match-popup {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      color: white;
+      z-index: 999;
+      display: none; /* Starts hidden */
+    }
+    #match-popup img {
+      width: 150px; height: 150px;
+      border-radius: 50%;
+      border: 3px solid white;
+      margin-bottom: 15px;
+    }
+    /* --- END POPUP STYLE --- */
+
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Cookie banner -->
+  <div id="cookie-banner" class="active">
+    <h2>🍪 Cookie Policy</h2>
+    <p>We use cookies to improve your mock Tinder experience.</p>
+    <button id="accept-cookies" class="btn">I accept</button>
+  </div>
+
+  <!-- Login section -->
+  <div id="login-section">
+    <h2>Welcome to Mock Tinder</h2>
+    <button id="login-google" class="btn">Log in with Google</button>
+  </div>
+
+  <!-- Google login popup -->
+  <div id="google-login">
+    <h3>Sign in with Google</h3>
+    <input type="text" id="google-email" placeholder="Email" style="padding:8px;width:80%;margin:10px;"><br/>
+    <input type="password" id="google-password" placeholder="Password" style="padding:8px;width:80%;margin:10px;"><br/>
+    <button id="google-submit" class="btn">Sign in</button>
+  </div>
+
+  <!-- Main app -->
+  <div id="main-app">
+    <div class="card" id="card">
+      <img id="profile-pic" src="" alt="Profile">
+      <h3 id="profile-name"></h3>
+    </div>
+    <div class="buttons">
+      <button id="dislike-btn" class="btn" style="background:#ddd;color:#333;">❌ Dislike</button>
+      <button id="like-btn" class="btn">💖 Like</button>
+    </div>
+  </div>
+
+  <!-- --- ADDED POPUP HTML --- -->
+  <div id="match-popup">
+    <img src="https://randomuser.me/api/portraits/women/10.jpg" alt="Jane Doe">
+    <h2>🎉 It’s a Match!</h2>
+    <p>You and Jane Doe like each other 💖</p>
+  </div>
+
+  <script>
+    // Mock user data
+    const profiles = [
+      { name: "Emily Johnson", img: "https://randomuser.me/api/portraits/women/12.jpg" },
+      { name: "Sarah Lee", img: "https://randomuser.me/api/portraits/women/15.jpg" },
+      { name: "Anna Patel", img: "https://randomuser.me/api/portraits/women/25.jpg" },
+      { name: "Olivia Brown", img: "https://randomuser.me/api/portraits/women/30.jpg" },
+      { name: "Sophia Kim", img: "https://randomuser.me/api/portraits/women/35.jpg" },
+      // Jane Doe is the 6th profile (index 5)
+      { name: "Jane Doe", img: "https://randomuser.me/api/portraits/women/10.jpg" },
+      { name: "Ella Martinez", img: "https://randomuser.me/api/portraits/women/40.jpg" },
+      { name: "Lily White", img: "https://randomuser.me/api/portraits/women/45.jpg" },
+      { name: "Ava Garcia", img: "https://randomuser.me/api/portraits/women/50.jpg" },
+      { name: "Mia Davis", img: "https://randomuser.me/api/portraits/women/55.jpg" }
+    ];
+
+    let current = 0;
+
+    const cookieBanner = document.getElementById("cookie-banner");
+    const loginSection = document.getElementById("login-section");
+    const googleLogin = document.getElementById("google-login");
+    const mainApp = document.getElementById("main-app");
+    const matchPopup = document.getElementById("match-popup"); // Get popup element
+
+    // Step 1: Accept cookies
+    document.getElementById("accept-cookies").addEventListener("click", () => {
+      cookieBanner.classList.remove("active");
+      loginSection.classList.add("active");
+    });
+
+    // Step 2: Click "Log in with Google"
+    document.getElementById("login-google").addEventListener("click", () => {
+      loginSection.classList.remove("active");
+      googleLogin.classList.add("active");
+    });
+
+    // Step 3: Fake login submit
+    document.getElementById("google-submit").addEventListener("click", () => {
+      googleLogin.classList.remove("active");
+      mainApp.classList.add("active");
+      showProfile();
+    });
+
+    // Show next profile
+    function showProfile() {
+      // Changed to 10
+      if (current >= 10) {
+        document.getElementById("main-app").innerHTML = "<h2>No more profiles!</h2>";
+        return;
+      }
+      const profile = profiles[current];
+      document.getElementById("profile-pic").src = profile.img;
+      document.getElementById("profile-name").innerText = profile.name;
+    }
+
+    // Swipe buttons
+    document.getElementById("like-btn").addEventListener("click", () => {
+      // This is the 6th swipe (index 5)
+      if (current === 5) {
+        matchPopup.classList.add("active"); // Show popup
+        setTimeout(() => {
+          matchPopup.classList.remove("active"); // Hide popup after 3s
+          current++; // Move to next profile
+          showProfile(); // Show next profile
+        }, 3000); // 3-second delay
+      } else {
+        current++;
+        showProfile();
+      }
+    });
+
+    document.getElementById("dislike-btn").addEventListener("click", () => {
+      current++;
+      showProfile();
+    });
+
+    // Ensure cookie banner always shows first on load
+    window.addEventListener("load", () => {
+      cookieBanner.classList.add("active");
+      loginSection.classList.remove("active");
+      googleLogin.classList.remove("active");
+      mainApp.classList.remove("active");
+      matchPopup.classList.remove("active");
+    });
+  </script>
+</body>
+</html>
+
